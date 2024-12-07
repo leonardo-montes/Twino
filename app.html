@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://miro.com/app/static/sdk/v2/miro.js"></script>
+    <title>Twino</title>
+  </head>
+  <body>
+    
+    <div id="root">
+      <div class="grid wrapper">
+        <div class="cs1 ce12">
+          <img src="/src/assets/Twine_vector_logo.svg" alt="" />
+        </div>
+        <div class="cs1 ce12">
+          <h1>Twine in Miro</h1>
+          <p>This Miro App allows users to create Twine stories directly in Miro and generate playable version online.</p>
+        </div>
+        <div class="cs1 ce12 centered">
+          <a
+            class="button button-primary"
+            id="create_story_template"
+          >
+            <span class="icon icon-plus"></span>Create New Story
+          </a>
+        </div>
+        <div class="cs1 ce12">
+            <hr/>
+        </div>
+        <div class="cs1 ce12 centered">
+          <div class="form-group" style="width:100%;">
+            <div style="display: flex; align-items:flex-end; justify-content: space-between; margin-bottom: 0.3rem;">
+              <label for="select-2">Select a Story</label>
+              <a
+                class="button button-primary button-small"
+                id="refresh_list"
+              ><span class="icon icon-refresh"></span></a>
+            </div>
+            <select class="select" id="select" disabled>
+              <option value="1">Empty</option>
+            </select>
+          </div>
+        </div>
+        <!--<div class="cs1 ce12 centered">
+          <a
+            class="button button-primary"
+            id="display_modal" disabled
+          >
+            <span class="icon icon-eye"></span>Test story
+          </a>
+        </div>-->
+        <div class="cs1 ce12 centered">
+          <a
+            class="button button-primary button-medium"
+            id="display_fullscreen" disabled
+          >
+            <span class="icon icon-presentation"></span>See story fullscreen
+          </a>
+        </div>
+        <div class="cs1 ce12 centered">
+          <a
+            class="button button-secondary button-small"
+            id="download" disabled
+          >
+            <span class="icon icon-download"></span>Download story
+          </a>
+        </div>
+      </div>
+    </div>
+    
+    <script type="module" src="/src/app.js"></script>
+  </body>
+</html>
