@@ -11,7 +11,7 @@ async function getTags(obj) {
     let tags = [];
     for (let i = 0; i < obj.tagIds.length; ++i) {
         const tag = await miro.board.getById(obj.tagIds[i]);
-        tags.push(tag.title);
+        tags.push(removeAllTags(tag.title));
     }
     return tags;
 }
@@ -89,7 +89,7 @@ export async function convertMiroToHTMLStory(listSelect, startCard) {
         let passages = [];
         //let startId = 0;
         for (let i = 0; i < rawPassages.length; ++i) {
-            let passage = new Passage(rawPassages[i].title, rawPassages[i].description, await getTags(rawPassages[i]));
+            let passage = new Passage(removeAllTags(rawPassages[i].title), rawPassages[i].description, await getTags(rawPassages[i]));
             passages.push(passage);
             if (startCardId == rawPassages[i].id) {
                 story.start = passage.name;
