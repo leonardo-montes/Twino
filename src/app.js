@@ -9,7 +9,10 @@ import { convertStoryToPlayable, convertMiroToHTMLStory, removeAllTags, storyFor
 import Passage from './extwee/Passage.js';
 import { Story } from './extwee/Story.js';
 
-function convertPassageTestToCardDescription (passageText) {
+// Convert a Twine Passage text into a card description
+// Basically this adds <p></p> to each line.
+// Return: string
+function convertPassageTextToCardDescription (passageText) {
     let lines = passageText.split('\n');
     let cardDescription = '';
     for (let i = 0; i < lines.length; ++i) {
@@ -18,11 +21,17 @@ function convertPassageTestToCardDescription (passageText) {
     return cardDescription;
 } 
 
+// Test include a whole word.
+// Return: bool
 function includesWholeWord(str, word) {
     const regex = new RegExp(`\\b${word}\\b`, 'i');
     return regex.test(str);
 }
 
+// Create a hierarchical tree layout for the passages so that
+// it's nice and readable.
+// Could probably be improved, this is just raw ChatGPT...
+// Return: Array of nodes
 function hierarchicalLayout(nodes, edges) {
     const nodeWidth = 220;
     const levelHeight = 100;
@@ -57,12 +66,14 @@ function hierarchicalLayout(nodes, edges) {
     return nodes;
 }  
 
+// Create a Miro Story from a Twine Story 
+// Return: Frame (Miro Element)
 async function createStoryLayout (story) {
-    
-    // Create passages
+    // Create the hierarchical layout
     let nodes = [];
     let edges = [];
-    // Create start node
+
+    // Add the start node
     nodes.push({
         'passage': null,
         'miroElement': null,
@@ -71,14 +82,16 @@ async function createStoryLayout (story) {
         'level': 0,
         'id': 0
     });
-    // Create start node connection
+
+    // Add the start node connection to the edge list
     for (let i = 0; i < story.passages.length; ++i) {
         if (story.passages[i].name == story.start) {
             edges.push({ source: 0, target: i + 1 });
             break;
         }
     }
-    // Create actual passage
+
+    // Add passages to nodes along with their connections to the edge list
     for (let i = 0; i < story.passages.length; ++i) {
         nodes.push({
             'passage': story.passages[i],
@@ -88,15 +101,19 @@ async function createStoryLayout (story) {
             'level': 0,
             'id': i + 1
         });
+
         // create connections
         for (let j = 0; j < story.passages.length; ++j) {
-            if (i != j && includesWholeWord(story.passages[i].text, story.passages[j].name)) {
+            if (includesWholeWord(story.passages[i].text, story.passages[j].name)) {
                 edges.push({ source: i + 1, target: j + 1 });
             }
         }
     }
+
+    // Do the hierarchical layout
     hierarchicalLayout(nodes, edges);
 
+    // Find out the width/height of the frame to encapsulate the nodes
     let width = 800;
     let height = 450;
     let minX = nodes[0].x - 110;
@@ -111,6 +128,7 @@ async function createStoryLayout (story) {
     width = Math.max(width, maxX - minX);
     height = Math.max(height, maxY);
 
+    // Cache some offsets
     const left = -width / 2.0;
     const top = -height / 2.0;
 
@@ -123,37 +141,38 @@ async function createStoryLayout (story) {
     const x = viewport.x + viewport.width / 2.0;
     const y = viewport.y + viewport.height / 2.0;
 
-    // Create frame
+    // Create frame (the name is important, it's how we find the stories)
     const frame = await miro.board.createFrame({
         title: 'Twine Story',
         style: {
-            fillColor: '#e6e6e6', // Default value: 'transparent' (no fill color)
+            fillColor: '#e6e6e6',
         },
-        x: x, // Default value: horizontal center of the board
-        y: y, // Default value: vertical center of the board
+        x: x,
+        y: y,
         width: width,
         height: height,
     });
 
-    // Create title
+    // Create title element
     const titleLabel = await miro.board.createText({
         content: '<p><i>Story Title</i></p>',
         style: {
-            color: '#cfcfcf', // Default value: '#1a1a1a' (black)
-            fillColor: 'transparent', // Default value: transparent (no fill)
-            fillOpacity: 1, // Default value: 1 (solid color)
-            fontFamily: 'roobert', // Default font type for the text
-            fontSize: 14, // Default font size for the text
-            textAlign: 'left', // Default horizontal alignment for the text
+            color: '#cfcfcf',
+            fillColor: 'transparent',
+            fillOpacity: 1,
+            fontFamily: 'roobert',
+            fontSize: 14,
+            textAlign: 'left',
         },
-        x: x + padding + left + labelWidth / 2.0, // Default value: horizontal center of the board
-        y: y + padding + top + labelHeight / 2.0, // Default value: vertical center of the board
+        x: x + padding + left + labelWidth / 2.0,
+        y: y + padding + top + labelHeight / 2.0,
         width: labelWidth,
         rotation: 0.0,
         relativeTo: 'parent_top_left',
     });
     frame.add(titleLabel);
     
+    // Create title field element
     const titleField = await miro.board.createShape({
         content: `<p><b>${story.name}</b></p>`,
         shape: 'round_rectangle',
@@ -180,25 +199,26 @@ async function createStoryLayout (story) {
     });
     await titleField.sync();
 
-    // Create story format
+    // Create story format title element
     const formatLabel = await miro.board.createText({
         content: '<p><i>Story Format</i></p>',
         style: {
-            color: '#cfcfcf', // Default value: '#1a1a1a' (black)
-            fillColor: 'transparent', // Default value: transparent (no fill)
-            fillOpacity: 1, // Default value: 1 (solid color)
-            fontFamily: 'roobert', // Default font type for the text
-            fontSize: 10, // Default font size for the text
-            textAlign: 'left', // Default horizontal alignment for the text
+            color: '#cfcfcf', 
+            fillColor: 'transparent', 
+            fillOpacity: 1, 
+            fontFamily: 'roobert', 
+            fontSize: 10, 
+            textAlign: 'left', 
         },
-        x: x + padding + left + labelWidth / 2.0, // Default value: horizontal center of the board
-        y: y + padding + top + labelHeight / 2.0 + 45, // Default value: vertical center of the board
+        x: x + padding + left + labelWidth / 2.0,
+        y: y + padding + top + labelHeight / 2.0 + 45,
         width: labelWidth,
         rotation: 0.0,
         relativeTo: 'parent_top_left',
     });
     frame.add(formatLabel);
     
+    // Fix story format in case it's missing the format version
     let formatVersion = story.formatVersion;
     if (formatVersion == '' || formatVersion == null) {
         for (let i = 0; i < storyFormats.length; ++i) {
@@ -208,6 +228,8 @@ async function createStoryLayout (story) {
             }
         }
     }
+
+    // Create story format field element
     const formatField = await miro.board.createShape({
         content: `<p><b>${story.format}-${story.formatVersion}</b></p>`,
         shape: 'round_rectangle',
@@ -234,37 +256,38 @@ async function createStoryLayout (story) {
     });
     await formatField.sync();
 
-    // IFID
+    // IFID title
     const ifidTitle = await miro.board.createText({
         content: `<p><i>IFID (do not edit)</i></p>`,
         style: {
-            color: '#cfcfcf', // Default value: '#1a1a1a' (black)
-            fillColor: 'transparent', // Default value: transparent (no fill)
-            fillOpacity: 1, // Default value: 1 (solid color)
-            fontFamily: 'arial', // Default font type for the text
-            fontSize: 10, // Default font size for the text
-            textAlign: 'left', // Default horizontal alignment for the text
+            color: '#cfcfcf', 
+            fillColor: 'transparent', 
+            fillOpacity: 1, 
+            fontFamily: 'arial', 
+            fontSize: 10, 
+            textAlign: 'left', 
         },
-        x: x + padding + left + 250 / 2.0, // Default value: horizontal center of the board
-        y: y + padding + top + labelHeight / 2.0 + 84, // Default value: vertical center of the board
+        x: x + padding + left + 250 / 2.0,
+        y: y + padding + top + labelHeight / 2.0 + 84,
         width: 250,
         rotation: 0.0,
         relativeTo: 'parent_top_left',
     });
     frame.add(ifidTitle);
 
+    // IFID label
     const ifidLabel = await miro.board.createText({
         content: `<p>${story.IFID}</p>`,
         style: {
-            color: '#cfcfcf', // Default value: '#1a1a1a' (black)
-            fillColor: 'transparent', // Default value: transparent (no fill)
-            fillOpacity: 1, // Default value: 1 (solid color)
-            fontFamily: 'plex_mono', // Default font type for the text
-            fontSize: 10, // Default font size for the text
-            textAlign: 'left', // Default horizontal alignment for the text
+            color: '#cfcfcf', 
+            fillColor: 'transparent', 
+            fillOpacity: 1, 
+            fontFamily: 'plex_mono', 
+            fontSize: 10, 
+            textAlign: 'left', 
         },
-        x: x + padding + left + 250 / 2.0, // Default value: horizontal center of the board
-        y: y + padding + top + labelHeight / 2.0 + 97, // Default value: vertical center of the board
+        x: x + padding + left + 250 / 2.0,
+        y: y + padding + top + labelHeight / 2.0 + 97,
         width: 250,
         rotation: 0.0,
         relativeTo: 'parent_top_left',
@@ -275,7 +298,7 @@ async function createStoryLayout (story) {
     });
     await ifidLabel.sync();
 
-    // Start node
+    // Start node element
     const startNode = await miro.board.createShape({
         content: '<p><b>START</b></p>',
         shape: 'circle',
@@ -306,7 +329,7 @@ async function createStoryLayout (story) {
     for (let i = 1; i < nodes.length; ++i) {
         nodes[i].miroElement = await miro.board.createCard({
             title: nodes[i].passage.name,
-            description: convertPassageTestToCardDescription(nodes[i].passage.text),
+            description: convertPassageTextToCardDescription(nodes[i].passage.text),
             style: {
                 cardTheme: '#414bb2',
                 fillBackground: true,
@@ -341,6 +364,7 @@ async function createStoryLayout (story) {
     return frame;
 }
 
+// Create a new story from a template
 async function createStoryTemplate (btn)
 {
     // Show loading
@@ -380,7 +404,9 @@ async function createStoryTemplate (btn)
     btn.classList.remove('button-loading');
 }
 
+// Downloads the selected Twine Story as a HTML file
 async function downloadStoryHTML(btn, listSelect) {
+    // Loading
     if (!btn.classList.contains('button-loading'))
         btn.classList.add('button-loading');
 
@@ -394,7 +420,7 @@ async function downloadStoryHTML(btn, listSelect) {
         }
         
         // Create a Blob with the HTML content
-        const blob = new Blob([htmlCompiledStory], { type: 'text/html' });
+        let blob = new Blob([htmlCompiledStory], { type: 'text/html' });
         
         // Create a temporary anchor element
         const a = document.createElement('a');
@@ -406,6 +432,7 @@ async function downloadStoryHTML(btn, listSelect) {
 
         // Clean up the Object URL
         URL.revokeObjectURL(a.href);
+        blob = null;
     
         // Display the notification on the board UI.
         await miro.board.notifications.showInfo(`Twine story downloaded!`);
@@ -419,6 +446,8 @@ async function downloadStoryHTML(btn, listSelect) {
     btn.classList.remove('button-loading');
 }
 
+// Refresh the list of twine stories in the Miro Board.
+// This is used to generate Twine Stories from Miro Stories.
 async function refreshList (btn, listSelect, btns)
 {
     // Show loading
@@ -431,6 +460,7 @@ async function refreshList (btn, listSelect, btns)
         type: ['frame'],
     });
 
+    // Look for frame stories in all the frames
     let stories = [];
     for (let i = 0; i < frames.length; ++i) {
         if (frames[i].title == 'Twine Story') {
@@ -440,6 +470,7 @@ async function refreshList (btn, listSelect, btns)
                 const metadata = await child.getMetadata('twine-data');
                 if (metadata != null && metadata.type == 'title-field')
                 {
+                    // We save the frame ID and the story title to display it
                     stories.push([ frames[i].id, removeAllTags(child.content) ]);
                 }
             }
@@ -458,7 +489,7 @@ async function refreshList (btn, listSelect, btns)
         listSelect.innerHTML = html;
     }
 
-    // Update buttons
+    // Update buttons interactability
     for (let i = 0; i < btns.length; ++i) {
         if (stories.length > 0)
             btns[i].removeAttribute('disabled');
@@ -471,6 +502,8 @@ async function refreshList (btn, listSelect, btns)
     btn.innerHTML = '<span class="icon icon-refresh"></span>';
 }
 
+// Imports a Twine Story from a local JSON, HTML, or TWEE file.
+// The file is imported and then a new layout is generated.
 async function importStory (file, btn) {
     // Show loading
     if (!btn.classList.contains('button-loading'))
@@ -538,10 +571,12 @@ async function importStory (file, btn) {
     btn.classList.remove('button-loading');
 }
 
+// Create a Template Passage from the story format templates.
+// Return: Card (Miro Element)
 async function createTemplatePassage (storyFormat, x, y) {
     const templatePassage = await miro.board.createCard({
         title: `Template Passage to Copy/Paste for ${storyFormat.title} story format`,
-        description: convertPassageTestToCardDescription(storyFormat.template),
+        description: convertPassageTextToCardDescription(storyFormat.template),
         style: {
             cardTheme: '#414bb2',
             fillBackground: true,
@@ -553,6 +588,7 @@ async function createTemplatePassage (storyFormat, x, y) {
     return templatePassage;
 }
 
+// Create a template passage from a specific story format
 window.createTemplatePassageFromId = async function(id) {
     const viewport = await miro.board.viewport.get();
     const x = viewport.x + viewport.width / 2.0;
@@ -566,8 +602,6 @@ window.createTemplatePassageFromId = async function(id) {
     // Display the notification on the board UI.
     await miro.board.notifications.showInfo(`New Template Passage using the ${storyFormats[id].title} story format has been created!`);
 };
-
-const listSelect = document.getElementById('select');
 
 // Create template
 const createStoryTemplateBtn = document.getElementById('create_story_template');
@@ -587,9 +621,10 @@ fileInput.addEventListener('change', (event) => {
 });
 
 // Export
+const listSelect = document.getElementById('select');
 const displayFullscreenBtn = document.getElementById('display_fullscreen');
 displayFullscreenBtn.addEventListener('click', (event) => {
-    convertStoryToPlayable(displayFullscreenBtn, false, listSelect, null);
+    convertStoryToPlayable(displayFullscreenBtn, listSelect, null);
 });
 
 const downloadBtn = document.getElementById('download');

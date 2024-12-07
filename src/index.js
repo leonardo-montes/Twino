@@ -1,6 +1,7 @@
 import { convertStoryToPlayable } from './utils.js';
 
 export async function init() {
+    // Create the custom action to playtest a Twine Story from a Miro Card.
     await miro.board.ui.on('custom:twine-test', async function (data) {
         if (data.items.length <= 0 && data.items.length >= 2) {
             await miro.board.notifications.showError(`Invalid selection!`);
@@ -9,7 +10,7 @@ export async function init() {
         await miro.board.notifications.showInfo(`Please wait for the story to compile...`);
         
         const firstCard = data.items[0];
-        convertStoryToPlayable(null, true, null, firstCard);
+        convertStoryToPlayable(null, null, firstCard);
     });
     await miro.board.experimental.action.register(
     {
@@ -33,6 +34,7 @@ export async function init() {
         }
     });
 
+    // Show the Twino panel
     miro.board.ui.on('icon:click', async () => {
         await miro.board.ui.openPanel({ url: 'app.html' }); 
     }); 

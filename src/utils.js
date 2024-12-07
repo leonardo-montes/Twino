@@ -3,6 +3,8 @@ import { Story } from './extwee/Story.js';
 import { parse as parseStoryFormat } from './extwee/StoryFormat/parse.js';
 import { compile as compileTwine2HTML } from './extwee/Twine2HTML/compile.js';
 
+// List of story formats, along with there versions and template file.
+// The template file is used to create template cards and help users starting out.
 export const storyFormats = [
     {
         'title': 'harlowe-3.3.9',
@@ -26,10 +28,15 @@ export const storyFormats = [
     },
 ];
 
+
+// Removes all the tags <> and </> from an input
+// Return: string
 export function removeAllTags(input) {
     return input.replace(/<\/?[^>]+(>|$)/g, ''); // Match any tag
 }
 
+// Get the Miro tags of a Miro element.
+// Return: Array of strings
 async function getTags(obj) {
     let tags = [];
     for (let i = 0; i < obj.tagIds.length; ++i) {
@@ -39,6 +46,11 @@ async function getTags(obj) {
     return tags;
 }
 
+// Cleans the Miro Card Description from the junk.
+// By default all line will be incased with <p></p> and some line breaks, we have to remove them.
+// We also add the ability to have comments using '//'. If a line starts with it it will be ignored
+// so that there is no empty lines left by it.
+// Return: string
 function cleanDescription (description) {
     description = description.replace(/<p>/gi, '');
     description = description.replace(/<br\s*\/?>/gi, '');
@@ -62,9 +74,12 @@ function cleanDescription (description) {
     return description;
 }
 
+// Converts a Miro story (so a frame, with a title, story format, IFID, start, and passages) into
+// a Twine Story object.
+// Return: Story?
 export async function convertMiroToHTMLStory(listSelect, startCard) {
     try {
-        // Get the story
+        // Get the story's frame
         let frameId = null;
         let startCardId = null;
         if (listSelect != null) {
@@ -75,7 +90,7 @@ export async function convertMiroToHTMLStory(listSelect, startCard) {
         }
         const frame = await miro.board.getById(frameId);
         
-        // Find start frame
+        // Find story data (start node if required, title, IFID, story format, and passages)
         let startNode = null;
         let title = null;
         let ifid = null;
@@ -129,7 +144,7 @@ export async function convertMiroToHTMLStory(listSelect, startCard) {
             return null;
         }
 
-        // Find the start
+        // Find the start if required (skip if we are testing from a card)
         if (startCardId == null) {
             // Early-out
             if (startNode == null)
@@ -156,6 +171,9 @@ export async function convertMiroToHTMLStory(listSelect, startCard) {
         // Create the story data
         let story = new Story(title);
         story.IFID = ifid;
+        let format = formatTitle.split('-');
+        story.format = format[0];
+        story.formatVersion = format[1];
         
         // Create the passages
         let passages = [];
@@ -189,7 +207,11 @@ export async function convertMiroToHTMLStory(listSelect, startCard) {
     return null;
 }
 
-export async function convertStoryToPlayable(btn, modal, listSelect, startCard) {
+// Convert the selected story or card to a Twine Story, compile it and open in a new Tab.
+// /!\ I tried adding the modal view from Miro, but it was not working properly for some reason
+//     (start passage would be ignored and a random passage would be chosen), so I removed it.
+export async function convertStoryToPlayable(btn, listSelect, startCard) {
+    // Button loading
     if (btn != null && !btn.classList.contains('button-loading'))
         btn.classList.add('button-loading');
 
@@ -202,11 +224,14 @@ export async function convertStoryToPlayable(btn, modal, listSelect, startCard) 
             return;
         }
         
+        // Turn into a blob and generate a URL
         let blob = new Blob([htmlCompiledStory], { type: 'text/html' });
         const url = URL.createObjectURL(blob);
 
         // Open the URL in a new tab
         window.open(url, '_blank');
+
+        // Dispose of the URL and blob
         URL.revokeObjectURL(url);
         blob = null;
     
