@@ -1,7 +1,7 @@
 import { parse as HtmlParser } from 'node-html-parser';
 import { Story } from '../Story.js';
 import Passage from '../Passage.js';
-import { decode } from 'html-entities';
+import { decode } from '../../html-entities/index.ts';
 
 /**
  * Parse Twine 2 HTML into Story object.

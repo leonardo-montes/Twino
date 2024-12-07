@@ -9,7 +9,8 @@
   },
   "dependencies": {
     "@mirohq/websdk-types": "^2.16.1",
-    "mirotone": "5"
+    "mirotone": "5",
+    "node-html-parser": "^6.1.13"
   },
   "devDependencies": {
     "vite": "3.0.3"

@@ -3,6 +3,29 @@ import { Story } from './extwee/Story.js';
 import { parse as parseStoryFormat } from './extwee/StoryFormat/parse.js';
 import { compile as compileTwine2HTML } from './extwee/Twine2HTML/compile.js';
 
+export const storyFormats = [
+    {
+        'title': 'harlowe-3.3.9',
+        'template': ``
+    },
+    {
+        'title': 'chapbook-2.2.0',
+        'template': ''
+    },
+    {
+        'title': 'paperthin-1.0.0',
+        'template': ''
+    },
+    {
+        'title': 'snowman-2.0.2',
+        'template': ''
+    },
+    {
+        'title': 'sugarcube-2.37.3',
+        'template': ''
+    },
+];
+
 export function removeAllTags(input) {
     return input.replace(/<\/?[^>]+(>|$)/g, ''); // Match any tag
 }
@@ -14,6 +37,29 @@ async function getTags(obj) {
         tags.push(removeAllTags(tag.title));
     }
     return tags;
+}
+
+function cleanDescription (description) {
+    description = description.replace(/<p>/gi, '');
+    description = description.replace(/<br\s*\/?>/gi, '');
+    description = description.replace(/&lt;/gi, '\<');
+    description = description.replace(/&gt;/gi, '\>');
+    description = description.replace(/&#39;/gi, '\'');
+
+    let lines = description.split('<\/p>');
+    description = '';
+    for (let i = 0; i < lines.length; ++i) {
+        let line = lines[i];
+        if (line.startsWith('//'))
+            continue;
+        if (line.includes('//')) {
+            let id = line.indexOf('//');
+            line = line.substring(0, id);
+        }
+        description += line + '\n';
+    }
+
+    return description;
 }
 
 export async function convertMiroToHTMLStory(listSelect, startCard) {
@@ -33,6 +79,7 @@ export async function convertMiroToHTMLStory(listSelect, startCard) {
         let startNode = null;
         let title = null;
         let ifid = null;
+        let formatTitle = null;
         let rawPassages = [];
         for (let j = 0; j < frame.childrenIds.length; ++j)
         {
@@ -48,6 +95,9 @@ export async function convertMiroToHTMLStory(listSelect, startCard) {
                 } else if (ifid == null && metadata.type == 'ifid-field') {
                     ifid = removeAllTags(child.content);
                     continue;
+                }  else if (formatTitle == null && metadata.type == 'format-field') {
+                    formatTitle = removeAllTags(child.content);
+                    continue;
                 } 
             }
 
@@ -55,6 +105,28 @@ export async function convertMiroToHTMLStory(listSelect, startCard) {
                 rawPassages.push(child);
                 continue;
             }
+        }
+
+        // Early-out
+        if (title == null)
+        {
+            await miro.board.notifications.showError(`No title was found!`);
+            return null;
+        }
+        if (ifid == null)
+        {
+            await miro.board.notifications.showError(`No IFID was found!`);
+            return null;
+        }
+        if (formatTitle == null)
+        {
+            await miro.board.notifications.showError(`No Story Format was found!`);
+            return null;
+        }
+        if (rawPassages.length <= 0)
+        {
+            await miro.board.notifications.showError(`No Passages were found!`);
+            return null;
         }
 
         // Find the start
@@ -87,20 +159,13 @@ export async function convertMiroToHTMLStory(listSelect, startCard) {
         
         // Create the passages
         let passages = [];
-        //let startId = 0;
         for (let i = 0; i < rawPassages.length; ++i) {
-            let passage = new Passage(removeAllTags(rawPassages[i].title), rawPassages[i].description, await getTags(rawPassages[i]));
+            let passage = new Passage(removeAllTags(rawPassages[i].title), cleanDescription(rawPassages[i].description), await getTags(rawPassages[i]));
             passages.push(passage);
             if (startCardId == rawPassages[i].id) {
                 story.start = passage.name;
-                //startId = passages.length - 1;
             }
         }
-
-        // Set the start as the last element
-        //let startPassage = passages[startId];
-        //passages.splice(startId, 1);
-        //passages.splice(0, 0, startPassage);
 
         // Set passages
         story.passages = passages;
@@ -112,7 +177,7 @@ export async function convertMiroToHTMLStory(listSelect, startCard) {
         //story = parseTwee(storyData);
         
         // Import the default format
-        const storyFormatResponse = await fetch('/format.js');
+        const storyFormatResponse = await fetch(`/${formatTitle}.js`);
         const storyFormatData = await storyFormatResponse.text();
         const storyFormat = parseStoryFormat(storyFormatData);
 
@@ -141,13 +206,7 @@ export async function convertStoryToPlayable(btn, modal, listSelect, startCard) 
         const url = URL.createObjectURL(blob);
 
         // Open the URL in a new tab
-        if (!modal) {
-            window.open(url, '_blank');
-        } else {
-            //const { waitForClose } = await miro.board.ui.openModal({ url: 'reader.html', data: htmlCompiledStory }); 
-            //await waitForClose();
-            window.open(url, '_blank'); // Temp
-        }
+        window.open(url, '_blank');
         URL.revokeObjectURL(url);
         blob = null;
     
