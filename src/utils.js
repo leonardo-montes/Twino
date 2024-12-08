@@ -8,23 +8,267 @@ import { compile as compileTwine2HTML } from './extwee/Twine2HTML/compile.js';
 export const storyFormats = [
     {
         'title': 'harlowe-3.3.9',
-        'template': ``
+        'template': `STYLES
+Font variants:
+(text-style:"bold")[Your Text Here]
+
+(text-style:"italic")[Your Text Here]
+
+(text-style:"mark")[Your Text Here]
+
+Underline and strikes:
+(text-style:"mark")[Your Text Here]
+
+(text-style:"underline")[Your Text Here]
+
+(text-style:"double-underline")[Your Text Here]
+
+(text-style:"wavy-underline")[Your Text Here]
+
+(text-style:"strike")[Your Text Here]
+
+(text-style:"double-strike")[Your Text Here]
+
+(text-style:"wavy-strike")[Your Text Here]
+
+Superscript and subscript:
+(text-style:"superscript")[Your Text Here]
+
+(text-style:"subscript")[Your Text Here]
+
+Outlines:
+(text-style:"outline")[Your Text Here]
+
+(text-style:"shadow")[Your Text Here]
+
+(text-style:"emboss")[Your Text Here]
+
+(text-style:"blur")[Your Text Here]
+
+(text-style:"blurrier")[Your Text Here]
+
+(text-style:"smear")[Your Text Here]
+
+Letter spacing:
+(text-style:"condense")[Your Text Here]
+
+(text-style:"expand")[Your Text Here]
+
+Flip and stretches:
+(text-style:"mirror")[Your Text Here]
+
+(text-style:"upside-down")[Your Text Here]
+
+(text-style:"tall")[Your Text Here]
+
+(text-style:"flat")[Your Text Here]
+
+Animations:
+(text-style:"blink")[Your Text Here]
+
+(text-style:"fade-in-out")[Your Text Here]
+
+(text-style:"rumble")[Your Text Here]
+
+(text-style:"shudder")[Your Text Here]
+
+(text-style:"sway")[Your Text Here]
+
+(text-style:"buoy")[Your Text Here]
+
+(text-style:"fidget")[Your Text Here]
+
+Combine styles:
+(text-style:"bold","underline","superscript","outline","condense","tall","buoy")[Your Text Here]
+
+COLOURS
+(text-colour:(hsl:210,0.8039,0.5,0.3))[Your Text Here]
+
+(bg:green)[Your Text Here]
+
+(bg:(gradient: 15, 0,#ffffff,0.5,#000000,1,#ffffff))[Your Text Here]
+
+LISTS AND ITEMS
+Bullet list:
+* Your Text Here
+* Your Text Here
+
+Numbered list:
+0. Your Text Here
+0. Your Text Here
+0. Your Text Here
+
+#Heading Text
+
+---
+Your Text Here
+
+ALIGNEMENT AND COLUMNS
+Align left:
+(align:'<==')[Your Text Here]
+
+Align right:
+(align:'==>')[Your Text Here]
+
+Align center:
+(align:'=><=')[Your Text Here]
+
+Align justify:
+(align:'<==>')[Your Text Here]
+
+Miscellaneous:
+(box:'=XXX=')[Your Text Here]
+(box:'=======XXXXXX=======')[Your Text Here]
+
+Columns:
+=|=
+Column 1
+=|=
+Column 2
+=|=
+Column 3
+|==|
+
+LINK
+[[My link text->Next Passage]]
+
+MISCELLANEOUS:
+Verbatim (ignore all markup inside):
+\`Verbatim Text\`
+
+HTML Comment (not run in-game)
+<!--Comment Text-->
+
+// This is a Miro editor only comment
+// If '//' is at the beginning of the line, the entire line is skipped.
+A comment can also be added at the end of a line // so the rest is not exported`
     },
     {
         'title': 'chapbook-2.2.0',
-        'template': ''
+        'template': `STYLE
+Bold:
+**My Text**
+
+Italic:
+*My Text*
+
+Monospaced:
+\`My Text\`
+
+Small caps:
+~~My Text~~
+
+Blockquote:
+<blockquote>Text</blockquote>
+
+Bulleted list:
+- Item
+- Item
+
+Fork list:
+> Link
+> Link
+
+Numbered list:
+1. Item
+2. Item
+
+Section break:
+***
+
+LINK:
+Passage link:
+{link to: 'Passage name', label: 'Label text'}
+
+Restart link:
+{restart link, label: 'Label text'}
+
+Reveal passage link:
+{reveal link: 'Label text', passage: 'Passage name'}
+
+Reveal text link:
+{reveal link: 'Label text', text: 'Displayed text'}
+
+MISCELLANEOUS:
+// This is a Miro editor only comment
+// If '//' is at the beginning of the line, the entire line is skipped.
+A comment can also be added at the end of a line // so the rest is not exported`
     },
     {
         'title': 'paperthin-1.0.0',
-        'template': ''
+        'template': `Paperthin is a proofing format. It will just display the story as is without any fancy effect or transition.`
     },
     {
         'title': 'snowman-2.0.2',
-        'template': ''
+        'template': `STYLE
+Bold:
+**My Text**
+
+Italic:
+*My Text*
+
+Monospaced:
+\`My Text\`
+
+Small caps:
+~~My Text~~
+
+Blockquote:
+<blockquote>Text</blockquote>
+
+Bulleted list:
+- Item
+- Item
+
+Fork list:
+> Link
+> Link
+
+Numbered list:
+1. Item
+2. Item
+
+Section break:
+***
+
+LINK:
+Passage link:
+[[Next Passage]]
+
+MISCELLANEOUS:
+// This is a Miro editor only comment
+// If '//' is at the beginning of the line, the entire line is skipped.
+A comment can also be added at the end of a line // so the rest is not exported`
     },
     {
         'title': 'sugarcube-2.37.3',
-        'template': ''
+        'template': `STYLE
+Bold:
+<b>My Text</b>
+
+Italic:
+<i>My Text</i>
+
+Small caps:
+~~My Text~~
+
+Blockquote:
+>Text
+
+Bulleted list:
+* Item
+** Item further away
+*** Item even further away
+* Item
+
+LINK:
+Passage link:
+[[Next Passage]]
+
+MISCELLANEOUS:
+// This is a Miro editor only comment
+// If '//' is at the beginning of the line, the entire line is skipped.
+A comment can also be added at the end of a line // so the rest is not exported`
     },
 ];
 

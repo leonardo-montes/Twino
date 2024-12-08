@@ -16,7 +16,10 @@ function convertPassageTextToCardDescription (passageText) {
     let lines = passageText.split('\n');
     let cardDescription = '';
     for (let i = 0; i < lines.length; ++i) {
-        cardDescription += `<p>${lines[i]}<\/p>`;
+        let line = lines[i];
+        line = line.replace('<', '&lt;');
+        line = line.replace('>', '&gt;');
+        cardDescription += `<p>${line}<\/p>\n`;
     }
     return cardDescription;
 } 
@@ -26,6 +29,18 @@ function convertPassageTextToCardDescription (passageText) {
 function includesWholeWord(str, word) {
     const regex = new RegExp(`\\b${word}\\b`, 'i');
     return regex.test(str);
+}
+
+// Test include a passage name word.
+// Return: bool
+function includesPassageName(str, word) {
+    return includesWholeWord(str, word) &&
+           (str.includes(`[[${word}]]`) ||
+            str.includes(`[[${word}`) ||
+            str.includes(`${word}]]`) ||
+            str.includes(`'${word}'`) ||
+            str.includes(`"${word}"`) ||
+            str.includes(`\`${word}\``));
 }
 
 // Create a hierarchical tree layout for the passages so that
@@ -104,7 +119,7 @@ async function createStoryLayout (story) {
 
         // create connections
         for (let j = 0; j < story.passages.length; ++j) {
-            if (includesWholeWord(story.passages[i].text, story.passages[j].name)) {
+            if (includesPassageName(story.passages[i].text, story.passages[j].name)) {
                 edges.push({ source: i + 1, target: j + 1 });
             }
         }
@@ -325,8 +340,44 @@ async function createStoryLayout (story) {
     await startNode.sync();
     nodes[0].miroElement = startNode;
 
+    // Get or create tags
+    let currentTags = [];
+    let boardTags = await miro.board.get({ type: 'tag' });
+    for (let i = 0; i < story.passages.length; ++i) {
+        for (let j = 0; j < story.passages[i].tags.length; ++j) {
+            // Try to get
+            let id = null;
+            for (let k = 0; k < boardTags.length; ++k) {
+                // found
+                if (boardTags[k].title == story.passages[i].tags[j]) {
+                    id = boardTags[k].id;
+                    break;
+                }
+            }
+            // Not found, create
+            if (id == null) {
+                const tag = await miro.board.createTag({ title: story.passages[i].tags[j], });
+                boardTags.push(tag);
+                id = tag.id;
+            }
+            // Record name and id
+            currentTags.push([ story.passages[i].tags[j], id]);
+        }
+    }
+
     // Create passage cards
     for (let i = 1; i < nodes.length; ++i) {
+        // Get passage's tag IDs
+        let tagIds = [];
+        for (let j = 0; j < nodes[i].passage.tags.length; ++j) {
+            for (let k = 0; k < currentTags.length; ++k) {
+                if (currentTags[k][0] == nodes[i].passage.tags[j]) {
+                    tagIds.push(currentTags[k][1]);
+                    break;
+                }
+            }
+        }
+        // Create card
         nodes[i].miroElement = await miro.board.createCard({
             title: nodes[i].passage.name,
             description: convertPassageTextToCardDescription(nodes[i].passage.text),
@@ -337,7 +388,9 @@ async function createStoryLayout (story) {
             x: x + nodes[i].x + 110,
             y: y + top + nodes[i].y + labelHeight / 2.0 + 45,  
             width: 200,
+            tagIds: tagIds,
         });
+        // Set card's parent
         frame.add(nodes[i].miroElement);
     }
 
